@@ -75,9 +75,7 @@ Uses BSEDos, Os2Dt;
 {$ENDIF}
 
 Type
-{$IFDEF MSDOS}
   CompatDateTime = DateTime;
-{$ENDIF}
 
 Const
   fmReadOnly  = $00;
@@ -157,8 +155,8 @@ end;
 {************************************************************************}
 Constructor MsgIdServ.Init(ServerName: String);
 Begin
-  If ServerName[Length(ServerName)] <> '\' then
-    ServerName := ServerName + '\';
+  If ServerName[Length(ServerName)] <> '/' then
+    ServerName := ServerName + '/';
   ServerName := ServerName + 'idserver.dat';
   Assign(ServerFile, ServerName);
   ServerFileName := ServerName;

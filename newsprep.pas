@@ -77,19 +77,20 @@
 {*                                                                      *}
 {* Third rewrite, the independent, configurable, shareable version:     *}
 {* v3.00- 1999-02-04 - Outputs PKT files, and reads a config file       *}
+{* v3.01- 2000-02-06 - Linux support (Free Pascal)                      *}
 {************************************************************************}
 
 Program NewsPrep;
 
 { $Id: NEWSPREP.PAS 2.2 1999/02/09 07:19:36 peter Exp $ }
 
-Uses Dos, PktHead, StrUtil, LogFileU, NLS, MsgIdU;
+Uses Dos, PktHead, StrUtil, LogFileU{, NLS}, MsgIdU;
 
 Const
-  Version = '3.0';
+  Version = '3.01';
   VerMaj = 3;
   VerMin = 0;
-  Copyright = '1996-1999 Peter Karlsson';
+  Copyright = '1996-2000 Peter Karlsson';
   Digits: Array[0..9] of Char = '0123456789';
   Months: Array[0..11] of String =
     ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -99,6 +100,9 @@ Const
   Fixed: Array[0..10] of Char = #1'FLAGS NPD'#13;
   Chrs: Array[0..14] of Char = #1'CHRS: IBMPC 2'#13;
   Null: Char = #0;
+{$IFDEF LINUX}
+  CR: Array[0..0] of Char = (#13);
+{$ENDIF}
 
 Var
   Indentation:    Byte;
@@ -129,10 +133,10 @@ Var
 {************************************************************************}
 Function WithSlash(S: String): String;
 Begin
-  If S[Length(s)] = '\' then
+  If S[Length(s)] = '/' then
     WithSlash := S
   else
-    WithSlash := S + '\';
+    WithSlash := S + '/';
 End;
 
 {************************************************************************}
@@ -212,16 +216,20 @@ Var
   Log:                                          LogFilePointer;
   PktHead_p:                                    ^PKTheader;
   PktMsg_p:                                     ^PkdMSG;
-  MsgId:                                        MsgIdServPointer;
+  MsgId:                                        MsgIdAbsPointer;
   C:                                            Char;
+{$IFDEF FPC}
+  MsgIdNum, PktNum, FirstMsgId:                 Cardinal;
+{$ELSE}
   MsgIdNum, PktNum, FirstMsgId:                 LongInt;
+{$ENDIF}
 Begin
   { Open and parse configuration file }
   {$I-}
-  Assign(IniFile, InSameDir(ParamStr(0), 'NEWSPREP.INI'));
+  Assign(IniFile, InSameDir(ParamStr(0), 'newsprep.ini'));
   Reset(IniFile);
   If IOResult <> 0 then begin
-    Writeln('File not found, ', InSameDir(ParamStr(0), 'NEWSPREP.INI'));
+    Writeln('File not found, ', InSameDir(ParamStr(0), 'newsprep.ini'));
     Halt(1);
   end;
   {$I+}
@@ -432,7 +440,10 @@ Begin
     PartsString[1] := '0';
 
   { Open MSGID server }
-  New(MsgId, Init(IdServer));
+  If IdServer <> '' then
+    MsgId := New(MsgIdServPointer, Init(IdServer))
+  else
+    MsgId := New(MsgIdStdPointer, Init);
   MsgIdNum := MsgId^.GetSerial(Parts); { Allocate MSGIDs }
   FirstMsgId := MsgIdNum;
   Dispose(MsgId);
@@ -558,7 +569,14 @@ Begin
 
     While not eof(TmpFile) do begin
       Read(TmpFile, C);
+      {$IFDEF LINUX}
+      if (C = #10) then
+        BlockWrite(PktFile, CR, 1)
+      else
+        BlockWrite(PktFile, C, 1);
+      {$ELSE}
       if (C <> #10) then BlockWrite(PktFile, C, 1);
+      {$ENDIF}
     end;
 
     Close(TmpFile);

@@ -1,0 +1,71 @@
+Azure/NewsPrep 3.0 - a FidoNews poster
+(c) Copyright 1996-1999 Peter Karlsson
+A Softwolves Software Release in 1999
+
+http://www.softwolves.pp.se/wolves/
+
+
+LICENSE
+
+Main source:
+
+This program is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 as published by
+the Free Software Foundation. In addition, it is allowed to link against
+the source libraries "nls.pas", "mkmisc.pas" and "crc32.pas" which are not
+covered by this license.
+
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc., 675
+Mass Ave, Cambridge, MA 02139, USA.
+
+
+NLS.PAS (Advanced Directory, Thomas Mainka):
+
+The program source can be changed or used in own programs under following
+terms. The usage or the changes must be marked in the own program and the
+full program source must be distributed with the program which used parts
+of my ADir. Exeptions to this terms must be asked for by the author.
+
+
+CRC32.PAS, MKMISC.PAS (MK Msg Access Source, Mythical Kingdom Software):
+
+Mythical Kingdom Software's MK Msg Access Source is copyright 1992-1994
+Mark May, and may be used freely, as long as any changes are marked
+(at least, that's what I understood from reading the license in the
+source archive, mksm106.zip).
+
+
+USAGE
+
+This program is used to post FidoNews issues in echomail. It will take one
+issue of FidoNews (uncompressed) and turn it into a PKT file which you can
+toss to your message base. For information on how to configure it, see the
+included NEWSPREP.INI file.
+
+
+HISTORY
+
+1999-02-08 - v3.0 - First public release
+
+
+INCLUDED FILES
+
+newsprep.exe - Main executable file
+newsprep.ini - Sample initialization file
+newsprep.doc - This poor excuse for documentation
+copying      - GNU GPL license
+source.rar   - Source code (messy!)
+
+
+CONTACT
+
+The author, Peter Karlsson, can be contacted via netmail at 2:206/221.0, or
+via Internet e-mail at peter@softwolves.pp.se. Information about this
+program is available on the world wide web at
+http://www.softwolves.pp.se/wolves/

@@ -38,17 +38,22 @@ Function   ASCIZ          (ch_p: CharPointer): String;
 Function   Convert        (str: String; charset: CharsetType): String;
 Function   InSameDir      (FullPath, FileName: String): String;
 Function   LogTime        : String;
+{$IFDEF FPC}
+Function   LongWord       (dwrd: Cardinal): String;
+{$ELSE}
 Function   LongWord       (dwrd: LongInt): String;
+{$ENDIF}
 Function   ParseINI       (Indata: String; Var Keyword: String; Var Data: String): Boolean;
 Function   ReadRandomLine (filename: String): String;
 Procedure  RemoveJunk     (Var s: String);
 Function   RmUnderline    (instring: String): String;
 Procedure  StdoutOn       (TurnOn: Boolean);
 Function   YesNo          (s: String): Boolean;
+Function   UpStr          (Indata: String): String;
 
 Implementation
 
-Uses Dos, NLS;
+Uses Dos{, NLS};
 
 Const
   MonthStr: array[1..12] of string[3] = (
@@ -116,6 +121,25 @@ Type
                   end;
 
 {************************************************************************}
+{* Routine:     NumStr                                                  *}
+{************************************************************************}
+{* Inhalt:      Erzeugung eines Ziffern-Strings mit Vornullen           *}
+{* Copyright:   Fa. Borland (Beispielprogramm)                          *}
+{* Definition:  Function NumStr(N,D:Integer):String;                    *}
+{************************************************************************}
+
+Function NumStr(N, D: Integer): String;
+Var      HStr      : String;
+begin
+  HStr[0] := Chr(D);
+  while D > 0 do begin
+    HStr[D] := Chr(N mod 10 + Ord('0'));
+    N := N div 10;
+    Dec(D);
+  end;
+  NumStr := HStr;
+end;
+{************************************************************************}
 {* Rutin:       LogTime                                                 *}
 {************************************************************************}
 {* Inneh†ll:    Skapar en Squishstyle loggtidsstr„ng                    *}
@@ -140,7 +164,11 @@ End;
 {* Definition:  Function LongWord(dwrd: LongInt): String; Assembler;    *}
 {************************************************************************}
 
+{$IFDEF FPC}
+Function LongWord(dwrd: Cardinal): String;
+{$ELSE}
 Function LongWord(dwrd: LongInt): String;
+{$ENDIF}
 {$IFDEF MSDOS}
 Assembler;
 asm
@@ -212,6 +240,7 @@ Begin
     S[i] := HexChars[dwrd mod 16];
     dwrd := dwrd div 16;
   end;
+  Longword := S;
 End;
 {$ENDIF}
 
@@ -278,6 +307,7 @@ Var
   c:            Char;
 Begin
   tmp := '';
+  wasspace := false;
   If (s[1] <> '%') and (s[1] <> ';') then
   begin
     While s[1] = ' ' do
@@ -372,6 +402,17 @@ Begin
   Rewrite(Output);
 End;
 
+Function UpStr(Indata: String): String;
+Var
+  Utdata: String;
+  I:      Byte;
+Begin
+  Utdata := '';
+  For I := 1 to Length(Indata) do
+    Utdata := Utdata + UpCase(Indata[I]);
+  UpStr := Utdata;
+End;
+
 {************************************************************************}
 {* Rutin:       ParseINI                                                *}
 {************************************************************************}
@@ -446,7 +487,7 @@ Var
   i: Byte;
 Begin
   i := Length(FullPath);
-  While (i > 0) and (FullPath[i] <> '\') do
+  While (i > 0) and (FullPath[i] <> '/') do
     Dec(i);
  InSameDir := Copy(FullPath, 1, i) + FileName;
 end;
