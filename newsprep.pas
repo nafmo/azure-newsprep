@@ -22,8 +22,10 @@
   v2.01- 1997-07-22 - [s version only] Fixed problems with PGP signature
                     - fixes problem with '-' in section headline
   v2.02- 1997-07-27 - Fixes problem with size count of empty lines
-  v2.03- 1997-09-23 - Fixes problem with ten parts (was shown as xx/ 9)       }
-
+  v2.03- 1997-09-23 - Fixes problem with ten parts (was shown as xx/ 9)
+  v2.04- 1998-01-10 - Strips Origin lines
+                    - Issues with numbers less than 10 now gets a 0 inserted
+  v2.05- 1998-03-18 - Handles PGP keys in Int'l FidoNews too                  }
 
 Program NewsPrep;
 
@@ -32,19 +34,25 @@ Uses Dos;
 Const
   {$IFDEF INTL}
   Indentation = 6;
-  Version = '2.03i';
+  Version = '2.05i';
   Source = 'FIDO*.NWS';
   {$ENDIF}{$IFDEF SWE}
-  Version = '2.03s';
+  Version = '2.05s';
   Source = 'SFNEWS*.*';
   {$ENDIF}
   Copyright = '1996-1997 Peter Karlsson';
   NewsPath = 'C:\DEV\PAS\SRC\UTIL\NEWSPREP\';
   TempPath = 'G:\TEMP\';
+  {$IFDEF INTL}
   MsgBase = 'SD:\MAIL\SQUISH\FIDO\R20\FNEWS';
+  {$ENDIF}{$IFDEF SWE}
+  MsgBase = 'SD:\MAIL\SQUISH\FIDO\R20\SFNEWS';
+  {$ENDIF}
   EchoTossLog = 'D:\MAIL\PRG\SQUISH\ECHOTOSS.LOG';
   LogFile = 'C:\DEV\PAS\SRC\UTIL\NEWSPREP\ANNOUNCE.LOG';
+  {$IFDEF INTL}
   IdServer = 'C:\DEV\PAS\SRC\UTIL\NEWSPREP\';
+  {$ENDIF}
   Orig = '2:206/221.2';
 
 Var
@@ -82,9 +90,13 @@ Begin
     Readln(FidoNews, TextLine);
     {$IFDEF SWE}
     If TextLine = '-----BEGIN PGP SIGNED MESSAGE-----' then begin
+    {$ELSE}
+    If TextLine = '     -----BEGIN PGP SIGNED MESSAGE-----' then begin
+    {$ENDIF}
       Readln(FidoNews, TextLine); { Skippa tomrad }
       Readln(FidoNews, TextLine);
     end;
+    {$IFDEF SWE}
     If TextLine = '-----BEGIN PGP SIGNATURE-----' then begin
       While not eof(FidoNews) and (TextLine <> '-----END PGP SIGNATURE-----') do
         Readln(FidoNews, TextLine);
@@ -96,6 +108,7 @@ Begin
       GotTopLine := True;
       i := Pos('Volume ', TextLine);
       j := Pos(', Number ', TextLine);
+      If TextLine[j + 9] = ' ' then TextLine[j + 9] := '0';
       TopLine := {$IFDEF SWE} 'Sv ' + {$ENDIF} 'FidoNews ' +
                  Copy(TextLine, i + 7, j - i - 7) { †rg†ng } + ':' +
                  Copy(TextLine, j + 9, 2);
@@ -111,8 +124,22 @@ Begin
     If TextLine[1] = #1 then begin
       Indentation := 6;
     {$ENDIF}
+      {$IFDEF SWE}
       For i := 1 to 3 do
         Readln(FidoNews, TextLine);
+      {$ELSE}
+      For i := 1 to 3 do begin
+        Readln(FidoNews, TextLine);
+        If TextLine = '     -----BEGIN PGP SIGNATURE-----' then begin
+          While not eof(FidoNews) and (TextLine <> '     -----END PGP SIGNATURE-----') do
+            Readln(FidoNews, TextLine);
+          If TextLine = '     -----END PGP SIGNATURE-----' then
+            TextLine := '';
+        end;
+        If TextLine = '     =================================================================' then
+          i := 3;
+      end;
+      {$ENDIF}
       If TextLine = '     ================================================================='
       then begin
         Close(OutFile);
@@ -155,6 +182,8 @@ Begin
       Size := 0;
     end;
     TextLine := Copy(TextLine, Indentation, 80);
+   {If Copy(TextLine, 1, 4) = '--- '        then TextLine[2] := '+';}
+    If Copy(TextLine, 1, 11)= ' * Origin: ' then TextLine[2] := '+';
     Writeln(OutFile, TextLine);
     Inc(Size, Length(TextLine) + 1);
   end;
@@ -177,7 +206,9 @@ Begin
   Writeln(OutFile, 'LogFile ' + LogFile);
   Writeln(OutFile, 'EchoTossLog ' + EchoTossLog);
   Writeln(OutFile, 'ReplyKludge No');
+  {$IFDEF INTL}
   Writeln(OutFile, 'IdServer ' + IdServer);
+  {$ENDIF}
   For i := 1 to Parts do begin
     Writeln(OutFile, 'MSG');
     Writeln(OutFile, 'From FidoNews Robot');
